@@ -60,10 +60,12 @@ float4 ray_at(struct ray ray, float t)
 
 float4 xform_vec(float16 xform, float4 vec)
 {
-	return (float4)(dot(xform.s048c, vec),
-			dot(xform.s159d, vec),
-			dot(xform.s26ae, vec),
-			dot(xform.s37bf, vec));
+	float4 res;
+	res  = xform.s0123 * vec.x;
+	res += xform.s4567 * vec.y;
+	res += xform.s89ab * vec.z;
+	res += xform.scdef * vec.w;
+	return res;
 }
 
 struct ray cam_get_ray(float16 xform, float2 xy)
@@ -76,10 +78,8 @@ struct ray cam_get_ray(float16 xform, float2 xy)
 	xy *= (float2)(1.0f, -1.0f);
 	xy *= film_size;
 
-	res.org = (float4)(0.0f, 0.0f, 0.0f, 1.0f);
+	res.org = (float4)(xform.scde, 1.0f);
 	res.dir = normalize((float4)(xy, -focal_len, 0.0f));
-
-	res.org = xform_vec(xform, res.org);
 	res.dir = xform_vec(xform, res.dir);
 
 	return res;
