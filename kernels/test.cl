@@ -73,15 +73,14 @@ struct ray cam_get_ray(float16 xform, float2 xy)
 	const float2 film_size = (float2)(2.0f, 2.0f);
 	const float focal_len = 1.0f;
 
-	struct ray res;
 	xy -= (float2)(0.5f);
 	xy *= (float2)(1.0f, -1.0f);
 	xy *= film_size;
 
-	res.org = (float4)(xform.scde, 1.0f);
+	struct ray res;
+	res.org = xform.scdef;
 	res.dir = normalize((float4)(xy, -focal_len, 0.0f));
 	res.dir = xform_vec(xform, res.dir);
-
 	return res;
 }
 
