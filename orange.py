@@ -17,6 +17,7 @@ class ProgramCache(object):
         self.cache = {}
         self.watcher = QFileSystemWatcher()
         self.watcher.fileChanged.connect(self._file_changed)
+        self.options = '-I ' + os.path.join(os.path.dirname(__file__), 'kernels')
 
     def _file_changed(self, path):
         path = str(path)
@@ -26,7 +27,8 @@ class ProgramCache(object):
     def get(self, path):
         prog = self.cache.get(path, None)
         if not prog:
-            prog = cl.Program(self.ctx, open(path).read()).build()
+            src = open(path).read()
+            prog = cl.Program(self.ctx, src).build(self.options)
             log.info('%s succesfully compiled' % path)
             self.cache[path] = prog
             self.watcher.addPath(path)
@@ -101,7 +103,7 @@ class Orange(object):
         cl.enqueue_acquire_gl_objects(self.queue, self.buf)
         global_size = (self.width, self.height)
         args = (self.cam_xform, np.int32(self.sample), self.env, back_buf, front_buf)
-        prog.foo(self.queue, global_size, None, *args)
+        prog.test(self.queue, global_size, None, *args)
         cl.enqueue_release_gl_objects(self.queue, self.buf)
         self.queue.finish()
         return front_buf.gl_object

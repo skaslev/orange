@@ -50,15 +50,6 @@ constant float G[16*4] = {
 	 0.0f, -1.0f, -1.0f, 0.0f
 };
 
-int mod(int x, int a)
-{
-	int n = x / a;
-	int v = v - n * a;
-	if (v < 0)
-		v += a;
-	return v;
-}
-
 float smooth(float t)
 {
 	return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
@@ -75,26 +66,17 @@ float4 normalized(float4 v)
 
 float mix1d(float a, float b, float t)
 {
-	float ba = b - a;
-	float tba = t * ba;
-	float atba = a + tba;
-	return atba;
+	return (1 - t) * a + t * b;
 }
 
 float2 mix2d(float2 a, float2 b, float t)
 {
-	float2 ba = b - a;
-	float2 tba = t * ba;
-	float2 atba = a + tba;
-	return atba;
+	return (1 - t) * a + t * b;
 }
 
 float4 mix3d(float4 a, float4 b, float t)
 {
-	float4 ba = b - a;
-	float4 tba = t * ba;
-	float4 atba = a + tba;
-	return atba;
+	return (1 - t) * a + t * b;
 }
 
 int lattice1d(int i)
@@ -483,106 +465,4 @@ float turbulence3d(
 	}
 
 	return value;
-}
-
-kernel void GradientNoise(
-	write_only image2d_t output,
-	const float2 bias,
-	const float2 scale,
-	const float amplitude)
-{
-	int2 coord = (int2)(get_global_id(0), get_global_id(1));
-	int2 size = (int2)(get_global_size(0), get_global_size(1));
-	float2 position = (float2)(coord.x / (float)size.x, coord.y / (float)size.y);
-
-	float2 sample = (position + bias) * scale;
-	float value = ugnoise2d(sample);
-
-	float4 color = (float4)(value, value, value, 1.0f) * amplitude;
-	color.w = 1.0f;
-	write_imagef(output, coord, color);
-}
-
-kernel void MonoFractal(
-	write_only image2d_t output,
-	const float2 bias,
-	const float2 scale,
-	const float lacunarity,
-	const float increment,
-	const float octaves,
-	const float amplitude)
-{
-	int2 coord = (int2)(get_global_id(0), get_global_id(1));
-	int2 size = (int2)(get_global_size(0), get_global_size(1));
-	float2 position = (float2)(coord.x / (float)size.x, coord.y / (float)size.y);
-
-	float2 sample = (position + bias);
-	float value = monofractal2d(sample, scale.x, lacunarity, increment, octaves);
-	float4 color = (float4)(value, value, value, 1.0f) * amplitude;
-	color.w = 1.0f;
-	write_imagef(output, coord, color);
-}
-
-kernel void Turbulence(
-	write_only image2d_t output,
-	const float2 bias,
-	const float2 scale,
-	const float lacunarity,
-	const float increment,
-	const float octaves,
-	const float amplitude)
-{
-	int2 coord = (int2)(get_global_id(0), get_global_id(1));
-	int2 size = (int2)(get_global_size(0), get_global_size(1));
-	float2 position = (float2)(coord.x / (float)size.x, coord.y / (float)size.y);
-
-	float2 sample = (position + bias);
-	float value = turbulence2d(sample, scale.x, lacunarity, increment, octaves);
-
-	float4 color = (float4)(value, value, value, 1.0f) * amplitude;
-	color.w = 1.0f;
-	write_imagef(output, coord, color);
-}
-
-kernel void RidgedMultiFractal(
-	write_only image2d_t output,
-	const float2 bias,
-	const float2 scale,
-	const float lacunarity,
-	const float increment,
-	const float octaves,
-	const float amplitude)
-{
-	int2 coord = (int2)(get_global_id(0), get_global_id(1));
-	int2 size = (int2)(get_global_size(0), get_global_size(1));
-	float2 position = (float2)(coord.x / (float)size.x, coord.y / (float)size.y);
-
-	float2 sample = (position + bias);
-	float value = ridgedmultifractal2d(sample, scale.x, lacunarity, increment, octaves);
-
-	float4 color = (float4)(value, value, value, 1.0f) * amplitude;
-	color.w = 1.0f;
-	write_imagef(output, coord, color);
-}
-
-kernel void foo(write_only image2d_t img)
-{
-	int2 id = (int2)(get_global_id(0), get_global_id(1));
-	float2 pos = (float2)(get_global_id(0), get_global_id(1)) /
-		     (float2)(get_global_size(0), get_global_size(1));
-
-	const float2 scale = (float2)(20.0f, 20.0f);
-	const float2 bias = (float2)(128.0f, 128.0f);
-	const float lacunarity = 2.02f;
-	const float increment = 1.0f;
-	const float octaves   = 3.3f;
-	const float amplitude = 1.0f;
-
-	float2 sample = (pos + bias) * scale;
-	float f = ugnoise2d(sample);
-	//float f = turbulence2d(sample, 2, lacunarity, increment, octaves);
-
-	float4 res = (float4)(f, f, f, 1.0f) * amplitude;
-	res.w = 1.0f;
-	write_imagef(img, id, res);
 }
