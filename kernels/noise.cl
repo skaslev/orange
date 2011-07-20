@@ -64,21 +64,6 @@ float4 normalized(float4 v)
 	return result;
 }
 
-float mix1d(float a, float b, float t)
-{
-	return (1 - t) * a + t * b;
-}
-
-float2 mix2d(float2 a, float2 b, float t)
-{
-	return (1 - t) * a + t * b;
-}
-
-float4 mix3d(float4 a, float4 b, float t)
-{
-	return (1 - t) * a + t * b;
-}
-
 int lattice1d(int i)
 {
 	return P[i];
@@ -127,7 +112,7 @@ float sgnoise1d(float position)
 	float n0 = gradient1d(ip + 0, fp - 0.0f);
 	float n1 = gradient1d(ip + 1, fp - 1.0f);
 
-	float n = mix1d(n0, n1, smooth(fp));
+	float n = mix(n0, n1, smooth(fp));
 	return n * (1.0f / 0.7f);
 }
 
@@ -158,8 +143,8 @@ float sgnoise2d(float2 position)
 	const float2 n0001 = (float2)(n00, n01);
 	const float2 n1011 = (float2)(n10, n11);
 
-	float2 n2 = mix2d(n0001, n1011, smooth(fp.x));
-	float n = mix1d(n2.x, n2.y, smooth(fp.y));
+	float2 n2 = mix(n0001, n1011, smooth(fp.x));
+	float n = mix(n2.x, n2.y, smooth(fp.y));
 	return n * (1.0f / 0.7f);
 }
 
@@ -205,9 +190,9 @@ float sgnoise3d(float4 position)
 	float4 n40 = (float4)(n000, n001, n010, n011);
 	float4 n41 = (float4)(n100, n101, n110, n111);
 
-	float4 n4 = mix3d(n40, n41, smooth(fp.x));
-	float2 n2 = mix2d(n4.xy, n4.zw, smooth(fp.y));
-	float n = mix1d(n2.x, n2.y, smooth(fp.z));
+	float4 n4 = mix(n40, n41, smooth(fp.x));
+	float2 n2 = mix(n4.xy, n4.zw, smooth(fp.y));
+	float n = mix(n2.x, n2.y, smooth(fp.z));
 	return n * (1.0f / 0.7f);
 }
 
