@@ -2,6 +2,28 @@
 #include "sampler.cl"
 #include "math.cl"
 
+//#define SCENE(p)	sphere((float4)(0,0,0,1), 2.0f, 0.25f, p)
+//#define SCENE(p)	ruby(2.0f, 0.25f, p)
+#define SCENE(p)	pyroclastic((float4)(0,0,0,1), 2.0f, 1.0f, p)
+
+float ruby(float radius, float density, float4 p)
+{
+	p = fabs(p);
+	return density * step(p.x + p.y + p.z, radius);
+}
+
+float sphere(float4 center, float radius, float density, float4 p)
+{
+	return density * step(distance(center, p), radius);
+}
+
+float pyroclastic(float4 center, float radius, float density, float4 p)
+{
+	float d = distance(center, p);
+	float n = 0.06f * turbulence3d(p, 5.0f, 1.0f, 1.0f, 8.0f);
+	return density * step(d + n, radius);
+}
+
 struct ray cam_get_ray(float16 xform, float2 xy)
 {
 	const float2 film_size = (float2)(2.0f, 2.0f);
@@ -18,17 +40,6 @@ struct ray cam_get_ray(float16 xform, float2 xy)
 	return res;
 }
 
-float ruby(float radius, float density, float4 p)
-{
-	p = fabs(p);
-	return density * step(p.x + p.y + p.z, radius);
-}
-
-float sphere(float4 center, float radius, float density, float4 p)
-{
-	return density * step(distance(center, p), radius);
-}
-
 float4 background(read_only image2d_t env, struct ray ray, float2 pos)
 {
 	float2 p = to_spherical(ray.dir);
@@ -39,9 +50,6 @@ float4 background(read_only image2d_t env, struct ray ray, float2 pos)
 				    | CLK_NORMALIZED_COORDS_TRUE;
 	return srgb_to_linear(read_imagef(env, env_sampler, p));
 }
-
-//#define SCENE(p)	sphere((float4)(0,0,0,1), 2.0f, 0.25f, p)
-#define SCENE(p)	ruby(2.0f, 0.25f, p)
 
 kernel void test(
 	global const float *camera_xform,
@@ -61,7 +69,7 @@ kernel void test(
 
 	float jit = sam_get(&sam, sample);
 	float farz = 10.0f;
-	float step = 0.25f;
+	float step = 2.0f;
 	int nr_steps = ceil(farz / step);
 
 	float4 sphere_color = (float4)(1.0f, 0.5f, 0.0f, 1.0f);
