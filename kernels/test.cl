@@ -40,7 +40,7 @@ struct ray cam_get_ray(float16 xform, float2 xy)
 	return res;
 }
 
-float4 background(read_only image2d_t env, struct ray ray, float2 pos)
+float4 background(read_only image2d_t env, struct ray ray)
 {
 	float2 p = to_spherical(ray.dir);
 	p = (float2)(-p.y / (2.0f * PI), p.x / PI);
@@ -72,7 +72,7 @@ kernel void test(
 	float step = 2.0f;
 	int nr_steps = ceil(farz / step);
 
-	float4 sphere_color = (float4)(1.0f, 0.5f, 0.0f, 1.0f);
+	float4 object_color = (float4)(1.0f, 0.5f, 0.0f, 1.0f);
 	struct ray ray = cam_get_ray(cam_xform, pos);
 	float d = 0.0f;
 	for (int i = 0; i < nr_steps; i++) {
@@ -80,7 +80,7 @@ kernel void test(
 		d += SCENE(p) * step;
 	}
 
-	float4 res = mix(background(env, ray, pos), sphere_color, min(d, 1.0f));
+	float4 res = mix(background(env, ray), object_color, min(d, 1.0f));
 	res /= (float)sample;
 	if (sample > 1) {
 		const sampler_t back_sampler = CLK_FILTER_NEAREST
