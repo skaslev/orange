@@ -72,7 +72,7 @@ kernel void test(
 	float step = 2.0f;
 	int nr_steps = ceil(farz / step);
 
-	float4 object_color = (float4)(1.0f, 0.5f, 0.0f, 1.0f);
+	float4 object_color = (float4)(1.0f, 1.0f, 1.0f, 1.0f);
 	struct ray ray = cam_get_ray(cam_xform, pos);
 	float d = 0.0f;
 	for (int i = 0; i < nr_steps; i++) {
