@@ -53,6 +53,9 @@ float4 environment(read_only image2d_t env, struct ray ray)
 
 constant float farz = 10.0f;
 constant float step_size = 2.0f;
+constant float sigma_a = 0.1f;
+constant float sigma_s = 0.9f;
+constant float lve = 1.5f;
 
 float ray_march(struct ray ray, float max_dist, float step_size, float u)
 {
@@ -63,6 +66,13 @@ float ray_march(struct ray ray, float max_dist, float step_size, float u)
 		res += DENSITY(p);
 	}
 	res *= step_size;
+	return res;
+}
+
+float transmittance(struct ray ray, float max_dist, float step_size, float u)
+{
+	float res = ray_march(ray, max_dist, step_size, u);
+	res *= sigma_a + sigma_s;
 	return exp(-res);
 }
 
@@ -83,18 +93,20 @@ kernel void test(
 	pos /= (float2)(get_global_size(0), get_global_size(1));
 
 	struct ray ray = cam_get_ray(cam_xform, pos);
-	float d = ray_march(ray, farz, step_size, sam_get(&sam));
-	float4 res = d * environment(env, ray);
+	float tr = transmittance(ray, farz, step_size, sam_get(&sam));
+	float4 res = tr * environment(env, ray);
 
 	float dist = sam_get(&sam) * farz;
-	d = ray_march(ray, dist, step_size, sam_get(&sam));
-	if (fabs(d - 1.0f) > EPS) {
+	tr = transmittance(ray, dist, step_size, sam_get(&sam));
+	if (fabs(tr - 1.0f) > EPS) {
+		res += tr * lve;
 		struct ray wi;
 		wi.org = ray_at(ray, dist);
 		wi.dir = uniform_sample_sphere(sam_get(&sam), sam_get(&sam));
-		float di = ray_march(wi, farz, 2.0f * step_size, sam_get(&sam));
-		float fudge = 5.0f;
-		res += d * di * environment(env, wi) * fudge;
+		float pdf = 1.0f / (4.0f * PI);
+		float phase = 1.0f/ (4.0f * PI);
+		float di = transmittance(wi, farz, 2.0f * step_size, sam_get(&sam));
+		res += tr * sigma_s * di * environment(env, wi);// * phase / pdf;
 	}
 
 	res /= (float)sample;
