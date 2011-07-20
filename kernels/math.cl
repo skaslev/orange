@@ -26,6 +26,16 @@ float2 to_spherical(float4 v)
 	return (float2)(acos(v.y), atan2(v.x, v.z));
 }
 
+float4 uniform_sample_sphere(float u1, float u2)
+{
+	float z = 1.0f - 2.0f * u1;
+	float r = sqrt(max(0.0f, 1.0f - z * z));
+	float phi = 2.0f * PI * u2;
+	float x = r * cos(phi);
+	float y = r * sin(phi);
+	return (float4)(x, y, z, 0.0f);
+}
+
 float4 srgb_to_linear(float4 c)
 {
 	float4 res;

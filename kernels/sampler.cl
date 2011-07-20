@@ -29,20 +29,22 @@ float rad_inv(unsigned n, unsigned base, unsigned omega)
 struct sampler {
 	unsigned dim;
 	unsigned omega;
+	unsigned sample;
 };
 
-void sam_init(struct sampler *sam, unsigned seed)
+void sam_init(struct sampler *sam, unsigned sample, unsigned seed)
 {
 	sam->dim = 0;
+	sam->sample = sample;
 	sam->omega = seed % ARRAY_SIZE(primes);
 }
 
-float sam_get(struct sampler *sam, unsigned sample)
+float sam_get(struct sampler *sam)
 {
 	unsigned omega = sam->omega;
 	if (omega == sam->dim)
 		omega++;
-	float res = rad_inv(sample, primes[sam->dim], primes[omega]);
+	float res = rad_inv(sam->sample, primes[sam->dim], primes[omega]);
 	sam->dim++;
 	return res;
 }
