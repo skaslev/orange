@@ -82,22 +82,19 @@ kernel void test(
 	pos += (float2)(sam_get(&sam), sam_get(&sam));
 	pos /= (float2)(get_global_size(0), get_global_size(1));
 
-	float4 res;
-	float dist = sam_get(&sam) * farz;
 	struct ray ray = cam_get_ray(cam_xform, pos);
-	float d = ray_march(ray, dist, step_size, sam_get(&sam));
-	if (fabs(d - 1.0f) < EPS) {
-		res = environment(env, ray);
-	} else {
+	float d = ray_march(ray, farz, step_size, sam_get(&sam));
+	float4 res = d * environment(env, ray);
+
+	float dist = sam_get(&sam) * farz;
+	d = ray_march(ray, dist, step_size, sam_get(&sam));
+	if (fabs(d - 1.0f) > EPS) {
 		struct ray wi;
 		wi.org = ray_at(ray, dist);
 		wi.dir = uniform_sample_sphere(sam_get(&sam), sam_get(&sam));
 		float di = ray_march(wi, farz, 2.0f * step_size, sam_get(&sam));
 		float fudge = 5.0f;
-		res = d * di * environment(env, wi) * fudge;
-		wi.dir = ray.dir;
-		di = ray_march(wi, farz, 2.0f * step_size, sam_get(&sam));
-		res += d * di * environment(env, wi);
+		res += d * di * environment(env, wi) * fudge;
 	}
 
 	res /= (float)sample;
