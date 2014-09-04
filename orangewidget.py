@@ -50,7 +50,7 @@ class OrangeWidget(QtOpenGL.QGLWidget):
         dy = dxy.y() / self.height()
         if event.buttons() & QtCore.Qt.LeftButton:
             self.camera.rotate(dx, dy)
-        elif (event.buttons() & Qt.MidButton) or event.modifiers():
+        elif (event.buttons() & QtCore.Qt.MidButton) or event.modifiers():
             self.camera.pan(dx, dy)
         elif event.buttons() & QtCore.Qt.RightButton:
             self.camera.zoom(dx, dy)
